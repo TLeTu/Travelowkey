@@ -32,7 +32,7 @@ if ($userExists) {
     $row = $result->fetch_assoc();
     $storedPassword = $row['Password']; 
     // $passwordIsCorrect = password_verify($password, $storedPassword);
-    $passwordIsCorrect = $storedPassword == $password;
+    $passwordIsCorrect = password_verify($password, $storedPassword);
     if ($passwordIsCorrect) {
         // User successfully logged in, return success message and user id
         echo json_encode(array('success' => true, 'userId' => $row['Id']));

@@ -17,6 +17,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 $email = $data['email'];
 $phone = $data['phone'];
 $password = $data['password'];
+$hased_password = password_hash($password, PASSWORD_DEFAULT);
 
 $sql = "SELECT * FROM user WHERE Email = ? OR Phone = ?";
 $stmt = $conn->prepare($sql);
@@ -37,7 +38,7 @@ if ($result->num_rows > 0) {
     if ($passport_stmt->execute()) {
         $sql = "INSERT INTO user (Id, Email, Phone, Password, Passport_id) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssss", $unique_id, $email, $phone, $password, $unique_passport_id);
+        $stmt->bind_param("sssss", $unique_id, $email, $phone, $hased_password, $unique_passport_id);
     
         if ($stmt->execute()) {
             echo json_encode(array('status' => 'success', 'userId' => $unique_id));
