@@ -6,10 +6,11 @@ $action = $_POST['action'];
 if($action == 'change-password'){
     $userId = $_POST['userId'];
     $newPassword = $_POST['newPassword'];
+    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
     $sql = "UPDATE user SET";
 
-    $sql .= " `Password` = '$newPassword'";
+    $sql .= " `Password` = '$hashedPassword'";
 
     $sql .= " WHERE `Id` = '$userId';";
 
@@ -26,7 +27,8 @@ if($action == 'change-password'){
 if($action == 'check-old-password'){
     $userId = $_POST['userId'];
     $oldPassword = $_POST['oldPassword'];
-    $sql = "SELECT * FROM user WHERE `Id` = '$userId' AND `Password` = '$oldPassword';";
+    $hashedOldPassword = password_hash($oldPassword, PASSWORD_DEFAULT);
+    $sql = "SELECT * FROM user WHERE `Id` = '$userId' AND `Password` = '$hashedOldPassword';";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         echo 'success';
