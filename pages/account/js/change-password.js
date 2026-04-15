@@ -32,7 +32,7 @@ function CheckOldPassword() {
     //open connection
     xhttp.open('POST', '../../server/data-controller/account/change-password.php', true);
     xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xhttp.send(`action=check-old-password&userId=${getCookie("userId")}&oldPassword=${oldPassword.value}`);
+    xhttp.send(`action=check-old-password&oldPassword=${oldPassword.value}`);
 }
 
 function SavePassword() {
@@ -53,7 +53,7 @@ function SavePassword() {
     //open connection
     xhttp.open('POST', '../../server/data-controller/account/change-password.php', true);
     xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xhttp.send(`action=change-password&userId=${getCookie("userId")}&oldPassword=${oldPassword.value}&newPassword=${newPassword.value}`);
+    xhttp.send(`action=change-password&oldPassword=${oldPassword.value}&newPassword=${newPassword.value}`);
 }
 
 function getCookie(cname) {

@@ -1,14 +1,29 @@
-window.addEventListener('pageshow', () => {
-    // const userId = getCookie("userId");
-    // if (!userId) {
-    //     window.location.href = '../login/';
-    // } 
-    // Use the userLoggedIn cookie to determine if the user is logged in
-    const userLoggedIn = getCookie("userLoggedIn");
-    if (userLoggedIn !== "true") {
-        window.location.href = '../login/';
+window.addEventListener('pageshow', checkLoggedIn);
+
+async function checkLoggedIn() {
+  const userLoggedIn = getCookie('userLoggedIn');
+
+  // Keep user on page when client auth flag is present.
+  if (userLoggedIn === 'true') {
+    return;
+  }
+
+  try {
+    const response = await fetch('../../server/data-controller/check-user-info.php?action=check-user-info');
+    const raw = await response.text();
+    const data = raw ? JSON.parse(raw) : null;
+
+    // Server-authenticated user via JWT cookie.
+    if (response.ok && data && !data.error) {
+      return;
     }
-});
+
+    window.location.href = '../login/';
+  } catch (error) {
+    window.location.href = '../login/';
+    console.error('check-logged-in error:', error);
+  }
+}
 
 function getCookie(cname) {
     let name = cname + "=";

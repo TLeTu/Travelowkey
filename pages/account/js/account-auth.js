@@ -3,7 +3,6 @@ window.addEventListener("load", CheckAuthUser);
 const warningAuth = document.getElementById("warning-auth");
 
 function CheckAuthUser() {
-    const userId = getCookie("userId");
     const userAuth = getCookie("userAuth");
 
     if(userAuth == "false") {

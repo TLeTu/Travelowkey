@@ -1,5 +1,3 @@
-const userId = getCookie("userId");
-
 const billContainer = document.getElementById("bill-container");
 const flightBillContainer = document.getElementById("flight-bill");
 const busBillContainer = document.getElementById("bus-bill");
@@ -40,8 +38,7 @@ function LoadBill() {
   };
   xhttp.open(
     "GET",
-    "../../server/data-controller/account/get-data.php?action=load-bill&userId=" +
-      userId,
+    "../../server/data-controller/account/get-data.php?action=load-bill",
     true
   );
   xhttp.send();

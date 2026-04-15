@@ -1,12 +1,10 @@
 window.addEventListener("load", LoadAccountInfo);
-window.addEventListener("load", CheckLogin);
 
 let accountInfo = {}
 let newAccountInfo = {}
 let changeInfoNames = []
 
 function LoadAccountInfo() {
-  let userId = getCookie("userId");
   let xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
@@ -22,18 +20,10 @@ function LoadAccountInfo() {
   };
   xhttp.open(
     "GET",
-    "../../server/data-controller/account/get-data.php?action=load-account-info&userId=" +
-      userId,
+    "../../server/data-controller/account/get-data.php?action=load-account-info",
     true
   );
   xhttp.send();
-}
-
-function CheckLogin() {
-  let userId = getCookie("userId");
-  if (userId == "") {
-    window.location.href = "../login/index.html";
-  }
 }
 
 function LoadInfoView(info){
@@ -107,7 +97,7 @@ function SaveAccountInfo() {
           LoadAccountInfo();
           viewInfo.classList.remove("hide");
           editInfo.classList.add("hide");
-          CheckUserInfo(getCookie("userId"));
+          CheckUserInfo();
         } else {
           alert("Cập nhật thất bại");
         }
@@ -122,7 +112,7 @@ function SaveAccountInfo() {
     true
   );
   xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  xhttp.send("action=update-account-info&data=" + JSON.stringify(newAccountInfo) + "&changeInfoNames=" + JSON.stringify(changeInfoNames) + "&userId=" + getCookie("userId"));
+  xhttp.send("action=update-account-info&data=" + JSON.stringify(newAccountInfo) + "&changeInfoNames=" + JSON.stringify(changeInfoNames));
 }
 
 function SetNewInfo(id, key) {
@@ -140,7 +130,7 @@ function CancelEdit() {
   editInfo.classList.add("hide");
 }
 
-function CheckUserInfo(userId) {
+function CheckUserInfo() {
   let xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
@@ -160,8 +150,7 @@ function CheckUserInfo(userId) {
   };
   xhttp.open(
     "GET",
-    "../../server/data-controller/check-user-info.php?action=check-user-info&userId=" +
-      userId,
+    "../../server/data-controller/check-user-info.php?action=check-user-info",
     true
   );
   xhttp.send();

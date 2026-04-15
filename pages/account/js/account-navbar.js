@@ -13,7 +13,8 @@ function navigateTab(e) {
     }
     else if (e.currentTarget.id === "btn-account-logout") {
         //clear cookies and redirect to login page
-        document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "userLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "userAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         window.location.href = "../main/";
     }
 }
