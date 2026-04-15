@@ -13,17 +13,29 @@ document.querySelector(".btn-login").addEventListener("click", async (e) => {
       body: JSON.stringify({ emailOrPhone, password }),
     });
 
-    let result = await response.json();
+    const raw = await response.text();
+    let result;
+
+    try {
+      result = raw ? JSON.parse(raw) : null;
+    } catch (parseError) {
+      throw new Error(`Invalid server response (${response.status})`);
+    }
+
+    if (!result || typeof result.success === "undefined") {
+      throw new Error(`Unexpected server response (${response.status})`);
+    }
 
     if (result.success) {
       // setCookie("userId", result.userId, 1);
       setCookie("userLoggedIn", true, 1);
       CheckUserInfo();
     } else {
-      alert("Invalid email/phone or password");
+      alert(result.error || "Invalid email/phone or password");
     }
   } catch (error) {
     console.error("Error:", error);
+    alert("Login failed due to a server error. Please try again.");
   }
 });
 

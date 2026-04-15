@@ -21,9 +21,11 @@ if($action == 'check-user-info'){
     }
 
     // 2. Load your secret key from the .env file (just like you did in login.php)
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
-    $dotenv->load();
-    $secretKey = $_ENV['secret_key'];
+    // $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+    // $dotenv->load();
+    // $secretKey = $_ENV['secret_key'];
+    // Must match pages/login/login.php and be long enough for HS256 in php-jwt v7.
+    $secretKey = 'travelowkey_secret_key_please_change_2026';
 
     try {
         // 3. Decode the token to verify it hasn't been tampered with
