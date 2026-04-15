@@ -1,5 +1,7 @@
 <?php
 header('Content-Type: application/json');
+require '../../vendor/autoload.php';
+use Firebase\JWT\JWT;
 
 // Database connection
 $servername = "localhost";
@@ -35,8 +37,29 @@ if ($userExists) {
     $passwordIsCorrect = password_verify($password, $storedPassword);
     if ($passwordIsCorrect) {
         // User successfully logged in, return success message and user id
-        echo json_encode(array('success' => true, 'userId' => $row['Id']));
+        // echo json_encode(array('success' => true, 'userId' => $row['Id']));
         // echo json_encode(array('success' => true));
+        // Read the secret key from the .env file
+        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+        $dotenv->load();
+        $secretKey = $_ENV['secret_key'];
+
+        $issuedAt = new DateTimeImmutable();
+        $expire = $issuedAt->modify('+100 hour')->getTimestamp(); // Token expires in 1 hour
+        $servername = "localhost";
+
+        // Create the JWT payload
+        $payload = array(
+            'iat' => $issuedAt->getTimestamp(),
+            'iss' => $servername,
+            'nbf' => $issuedAt->getTimestamp(),
+            'exp' => $expire,
+            "user_id" => $row['Id']
+        );
+        // Generate the JWT token
+        $token = JWT::encode($payload, $secretKey, 'HS256');
+        setcookie("jwt_token", $token, $expire, "/", "", false, true);
+        echo json_encode(array('success' => true));
 
     } else {
         // Password is incorrect, return error message

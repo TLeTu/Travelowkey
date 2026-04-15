@@ -16,8 +16,9 @@ document.querySelector(".btn-login").addEventListener("click", async (e) => {
     let result = await response.json();
 
     if (result.success) {
-      setCookie("userId", result.userId, 1);
-      CheckUserInfo(result.userId);
+      // setCookie("userId", result.userId, 1);
+      setCookie("userLoggedIn", true, 1);
+      CheckUserInfo();
     } else {
       alert("Invalid email/phone or password");
     }
@@ -26,37 +27,41 @@ document.querySelector(".btn-login").addEventListener("click", async (e) => {
   }
 });
 
-function CheckUserInfo(userId) {
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
-    if (this.readyState == 4 && this.status == 200) {
-      try {
-        let userInfo = JSON.parse(this.responseText)[0];
+async function CheckUserInfo() {
+  try {
+    // We only send the action parameter. The browser automatically attaches the JWT cookie!
+    let response = await fetch("../../server/data-controller/check-user-info.php?action=check-user-info");
+    let data = await response.json();
 
-        setCookie("userAuth", true, 1);
-        for (let key in userInfo) {
-          if (userInfo[key] == null) {
-            //redirect to info page
-            setCookie("userAuth", false, 1);
-            break;
-          }
-        }
-
-        if (getCookie("userAuth") == "true") {
-          window.location.href = "../main/";
-        } else {
-          window.location.href = "../account/";
-        }
-      } catch (err) {}
+    // If the server sends back an error (like token expired), stop here.
+    if (data.error) {
+      console.error("Authorization failed:", data.error);
+      return;
     }
-  };
-  xhttp.open(
-    "GET",
-    "../../server/data-controller/check-user-info.php?action=check-user-info&userId=" +
-      userId,
-    true
-  );
-  xhttp.send();
+
+    let userInfo = data[0];
+
+    // Assume profile is complete to start
+    setCookie("userAuth", true, 1);
+    
+    // Check every field in the database row for a null value
+    for (let key in userInfo) {
+      if (userInfo[key] == null) {
+        // Redirect to info page because a field is missing
+        setCookie("userAuth", false, 1);
+        break;
+      }
+    }
+
+    // Redirect the user based on the cookie we just set
+    if (getCookie("userAuth") == "true") {
+      window.location.href = "../main/";
+    } else {
+      window.location.href = "../account/";
+    }
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+  }
 }
 
 function setCookie(cname, cvalue, exdays) {
