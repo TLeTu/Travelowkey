@@ -2,6 +2,26 @@
 
 require_once('../connect.php');
 require_once('./transfer-bill-info.php');
+require_once('../../../vendor/autoload.php');
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+function getUserIdFromJwtToken() {
+    $token = $_COOKIE['jwt_token'] ?? null;
+    if (!$token) {
+        return null;
+    }
+
+    $secretKey = 'travelowkey_secret_key_please_change_2026';
+
+    try {
+        $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+        return isset($decoded->user_id) ? (string)$decoded->user_id : null;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
 
 $action = $_POST["action"];
 
@@ -13,7 +33,15 @@ $transferBillInfo->endDate = $_POST["endDate"];
 $transferBillInfo->endTime = $_POST["endTime"];
 $transferBillInfo->totalPrice = $_POST["totalPrice"];
 
-$userID = $_POST["userID"];
+$userID = getUserIdFromJwtToken();
+
+if (!$userID) {
+    http_response_code(401);
+    $error = "error";
+    echo json_encode($error, JSON_UNESCAPED_UNICODE);
+    $conn->close();
+    exit;
+}
 
 if ($action == "payment") {
     $invoiceID = uniqid("I");
