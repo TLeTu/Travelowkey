@@ -2,8 +2,17 @@ const headerDefault = document.getElementById("header-default");
 const headerLoggedIn = document.getElementById("header-logged-in");
 
 window.addEventListener("load", () => {
-    const userId = getCookie("userId");
-    if (userId) {
+    // const userId = getCookie("userId");
+    // if (userId) {
+    //     headerDefault.classList.add('hide');
+    //     headerLoggedIn.classList.remove('hide');
+    // } else {
+    //     headerDefault.classList.remove('hide');
+    //     headerLoggedIn.classList.add('hide');
+    // }
+    // Use the userLoggedIn cookie to determine if the user is logged in
+    const userLoggedIn = getCookie("userLoggedIn");
+    if (userLoggedIn === "true") {
         headerDefault.classList.add('hide');
         headerLoggedIn.classList.remove('hide');
     } else {

@@ -20,16 +20,31 @@ function getCookie(cname) {
   const headerSignUpBtn = headerAccountBtnGroup.querySelector(".account-btn-group__sign-up-btn");
   const headerAccountBtn = headerAccountBtnGroup.querySelector(".account-btn-group__account-btn");
   
-  window.addEventListener("load",function(event){
-    const userId = getCookie("userId");
-    console.log("userId: ", userId);
-      if (userId) {
-          headerLoginBtn.classList.add("hide");
-          headerSignUpBtn.classList.add("hide");
-          headerAccountBtn.classList.remove("hide");
-      } else {
-          headerLoginBtn.classList.remove("hide");
-          headerSignUpBtn.classList.remove("hide");
-          headerAccountBtn.classList.add("hide");
-      }
-  });
+  // window.addEventListener("load",function(event){
+  //   const userId = getCookie("userId");
+  //   console.log("userId: ", userId);
+  //     if (userId) {
+  //         headerLoginBtn.classList.add("hide");
+  //         headerSignUpBtn.classList.add("hide");
+  //         headerAccountBtn.classList.remove("hide");
+  //     } else {
+  //         headerLoginBtn.classList.remove("hide");
+  //         headerSignUpBtn.classList.remove("hide");
+  //         headerAccountBtn.classList.add("hide");
+  //     }
+  // });
+
+  // Use the userLoggedIn cookie to determine if the user is logged in
+window.addEventListener("load", function(event) {
+  const userLoggedIn = getCookie("userLoggedIn");
+  console.log("userLoggedIn: ", userLoggedIn);
+  if (userLoggedIn === "true") {
+    headerLoginBtn.classList.add("hide");
+    headerSignUpBtn.classList.add("hide");
+    headerAccountBtn.classList.remove("hide");
+  } else {
+    headerLoginBtn.classList.remove("hide");
+    headerSignUpBtn.classList.remove("hide");
+    headerAccountBtn.classList.add("hide");
+  }
+});

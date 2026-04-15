@@ -1,8 +1,13 @@
 window.addEventListener('pageshow', () => {
-    const userId = getCookie("userId");
-    if (!userId) {
+    // const userId = getCookie("userId");
+    // if (!userId) {
+    //     window.location.href = '../login/';
+    // } 
+    // Use the userLoggedIn cookie to determine if the user is logged in
+    const userLoggedIn = getCookie("userLoggedIn");
+    if (userLoggedIn !== "true") {
         window.location.href = '../login/';
-    } 
+    }
 });
 
 function getCookie(cname) {
