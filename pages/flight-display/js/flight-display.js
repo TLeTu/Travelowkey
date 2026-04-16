@@ -186,18 +186,44 @@ function getCookie(cname) {
   return "";
 }
 
-document.addEventListener('click', function (e) {
+async function getUserInfoFromJwt() {
+  const userLoggedIn = getCookie("userLoggedIn");
+
+  if (userLoggedIn !== "true") {
+    return null;
+  }
+
+  try {
+    const response = await fetch("../../server/data-controller/check-user-info.php?action=check-user-info");
+    const raw = await response.text();
+    const data = raw ? JSON.parse(raw) : null;
+
+    if (!response.ok || !data || data.error || !Array.isArray(data) || data.length === 0) {
+      return null;
+    }
+
+    return data[0];
+  } catch (error) {
+    console.error("Auth check error:", error);
+    return null;
+  }
+}
+
+document.addEventListener('click', async function (e) {
   if (e.target.classList.contains('select-btn')) {
-    const userId = getCookie("userId");
-    if (!userId) {
+    const userInfo = await getUserInfoFromJwt();
+    if (!userInfo) {
         window.location.href = "../login"
         return;
     }
-    const userAuth = getCookie("userAuth");
-    if (userAuth == "false") {
+
+    for (let key in userInfo) {
+      if (userInfo[key] == null) {
         window.location.href = "../account"
         return;
+      }
     }
+
       let id = e.target.closest(".result-item").id;
       flightPaymentInfo.flightID = id.substring(12);
       flightPaymentInfo.ticketNumber = flightSearchInfo.passengerQuantity.adult + flightSearchInfo.passengerQuantity.child + flightSearchInfo.passengerQuantity.baby;

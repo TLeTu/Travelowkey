@@ -6,6 +6,8 @@ require_once('../../../vendor/autoload.php');
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+header('Content-Type: application/json');
+
 function getUserIdFromJwtToken() {
     $token = $_COOKIE['jwt_token'] ?? null;
     if (!$token) {
@@ -22,45 +24,70 @@ function getUserIdFromJwtToken() {
     }
 }
 
-$action = $_POST["action"];
-
-$totalPrice = $_POST["totalPrice"];
-$userId = getUserIdFromJwtToken();
-$busID = $_POST["busID"];
-$ticketNumber = $_POST["ticketNumber"];
-
-if (!$userId) {
-    http_response_code(401);
-    $error = "error";
-    echo json_encode($error, JSON_UNESCAPED_UNICODE);
-    $conn->close();
+function sendJson($payload, $statusCode = 200) {
+    http_response_code($statusCode);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
+$action = $_POST['action'] ?? '';
+
+$totalPrice = isset($_POST['totalPrice']) ? (int)$_POST['totalPrice'] : 0;
+$userId = getUserIdFromJwtToken();
+$busID = $_POST['busID'] ?? '';
+$ticketNumber = isset($_POST['ticketNumber']) ? (int)$_POST['ticketNumber'] : 0;
+
+if (!$userId) {
+    sendJson(['success' => false, 'message' => 'Unauthorized'], 401);
+}
+
+if ($action !== 'payment') {
+    sendJson(['success' => false, 'message' => 'Invalid action'], 400);
+}
+
+if ($totalPrice <= 0 || $ticketNumber <= 0 || $busID === '') {
+    sendJson(['success' => false, 'message' => 'Invalid payment data'], 400);
+}
+
 if ($action == "payment") {
-    $invoiceID = uniqid("I");
-    $busInvoiceID = uniqid("BI");
-    $seatNum = getSeatNum($conn, $busID) - $ticketNumber;
-    
-    $sql = "INSERT INTO invoice(Id, User_id, Total) VALUES('$invoiceID', '$userId', '$totalPrice');";
-    $sql .= "INSERT INTO bus_invoice(Id, Bus_id, Num_ticket, Invoice_id)
-    VALUES('$busInvoiceID', '$busID', '$ticketNumber', '$invoiceID');";
-    $sql .= "UPDATE bus SET NumSeat = '$seatNum' WHERE Id = '$busID'";
-    if ($conn->multi_query($sql) === TRUE) {
-        $success = "success";
-        echo json_encode($success, JSON_UNESCAPED_UNICODE);
-    } else {
-        $error = "error";
-        echo json_encode($error, JSON_UNESCAPED_UNICODE);
+    $invoiceID = uniqid('I');
+    $busInvoiceID = uniqid('BI');
+
+    try {
+        $conn->begin_transaction();
+
+        // Status column must exist in invoice table (PENDING/PAID/FAILED)
+        $stmtInvoice = $conn->prepare("INSERT INTO invoice(Id, User_id, Total, Status) VALUES(?, ?, ?, 'PENDING')");
+        if (!$stmtInvoice) {
+            throw new Exception($conn->error);
+        }
+        $stmtInvoice->bind_param('ssi', $invoiceID, $userId, $totalPrice);
+        if (!$stmtInvoice->execute()) {
+            throw new Exception($stmtInvoice->error);
+        }
+
+        $stmtBusInvoice = $conn->prepare('INSERT INTO bus_invoice(Id, Bus_id, Num_ticket, Invoice_id) VALUES(?, ?, ?, ?)');
+        if (!$stmtBusInvoice) {
+            throw new Exception($conn->error);
+        }
+        $stmtBusInvoice->bind_param('ssis', $busInvoiceID, $busID, $ticketNumber, $invoiceID);
+        if (!$stmtBusInvoice->execute()) {
+            throw new Exception($stmtBusInvoice->error);
+        }
+
+        $conn->commit();
+        sendJson([
+            'success' => true,
+            'invoice_id' => $invoiceID,
+            'amount' => $totalPrice
+        ]);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        sendJson(['success' => false, 'message' => 'Cannot create pending invoice'], 500);
+    } finally {
+        $conn->close();
     }
-
-    $conn->close();
 }
 
-function getSeatNum($conn, $busID) {
-    $sql = "SELECT NumSeat FROM bus WHERE Id = '$busID'";
-    $result = $conn->query($sql);
-    $row = $result->fetch_assoc();
-    $seatNum = $row["NumSeat"];
-    return $seatNum;
-}
+$conn->close();
+sendJson(['success' => false, 'message' => 'Unhandled request'], 400);

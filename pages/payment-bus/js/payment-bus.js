@@ -50,22 +50,43 @@ function changeMoneyFormat(money) {
 
 const btnPayment = document.querySelector(".btn-payment");
 
-btnPayment.addEventListener("click", function () { 
-    let xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            let result = JSON.parse(this.responseText);
-            if (result == "success") {
-                alert("Thanh toán thành công!");
-                window.location.href = "../account/index.html?nav=bill-pane";
-            }
-            else {
-                alert("Thanh toán thất bại!");
-                window.location.href = "../main/index.html";
-            }
-        };
-    };
-    xhttp.open("POST", "../../server/data-controller/payment-bus/post-data.php", true);
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send(`action=payment&busID=${busPaymentInfo.ID}&ticketNumber=${busPaymentInfo.ticketNumber}&totalPrice=${totalPrice}`);
+btnPayment.addEventListener("click", async function () {
+    try {
+        const initResponse = await fetch("../../server/data-controller/payment-bus/post-data.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `action=payment&busID=${encodeURIComponent(busPaymentInfo.ID)}&ticketNumber=${encodeURIComponent(busPaymentInfo.ticketNumber)}&totalPrice=${encodeURIComponent(totalPrice)}`
+        });
+
+        const initData = await initResponse.json();
+        if (!initData.success) {
+            alert("Khởi tạo thanh toán thất bại!");
+            return;
+        }
+
+        const zaloResponse = await fetch("../../server/data-controller/zalopay/create-zalopay.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                amount: initData.amount,
+                invoice_id: initData.invoice_id,
+                service_type: "bus"
+            })
+        });
+
+        const zaloData = await zaloResponse.json();
+        if (zaloData.success) {
+            window.location.href = zaloData.payment_url;
+            return;
+        }
+
+        alert("Không thể kết nối ZaloPay!");
+    } catch (error) {
+        console.error("Payment error:", error);
+        alert("Đã có lỗi xảy ra khi thanh toán!");
+    }
 });
